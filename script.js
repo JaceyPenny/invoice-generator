@@ -307,8 +307,9 @@ function generatePDF() {
     const clientEmail = document.getElementById('clientEmail').value;
     const balanceDue = document.getElementById('balanceDue').textContent;
 
-    // Format date
-    const dateObj = new Date(invoiceDate);
+    // Format date - parse in local timezone to avoid day shift
+    const [year, month, day] = invoiceDate.split('-').map(Number);
+    const dateObj = new Date(year, month - 1, day); // month is 0-indexed
     const formattedDate = dateObj.toLocaleDateString('en-US', { 
         year: 'numeric', 
         month: 'long', 
