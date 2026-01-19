@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice Generator</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Invoice Generator</h1>
+
+        <form id="invoiceForm">
+            <!-- My Information Section -->
+            <section class="section">
+                <h2>My Information</h2>
+                <div class="form-group">
+                    <label for="myName">Name:</label>
+                    <input type="text" id="myName" name="myName" required>
+                </div>
+                <div class="form-group">
+                    <label for="myAddress">Address:</label>
+                    <textarea id="myAddress" name="myAddress" rows="3" required></textarea>
+                </div>
+            </section>
+
+            <!-- Invoice Details Section -->
+            <section class="section">
+                <h2>Invoice Details</h2>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="invoiceDate">Invoice Date:</label>
+                        <input type="date" id="invoiceDate" name="invoiceDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="invoiceNumber">Invoice Number:</label>
+                        <input type="text" id="invoiceNumber" name="invoiceNumber" readonly>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Client Details Section -->
+            <section class="section">
+                <h2>Client Details</h2>
+                <div class="form-group">
+                    <label for="addressBookSelect">Saved Addresses:</label>
+                    <select id="addressBookSelect" class="form-control">
+                        <option value="">Select a saved address...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="clientName">Client Name:</label>
+                    <input type="text" id="clientName" name="clientName" required>
+                </div>
+                <div class="form-group">
+                    <label for="clientCompany">Company Name:</label>
+                    <input type="text" id="clientCompany" name="clientCompany">
+                </div>
+                <div class="form-group">
+                    <label for="clientAddress">Address:</label>
+                    <textarea id="clientAddress" name="clientAddress" rows="3" required></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="clientPhone">Phone Number:</label>
+                        <input type="tel" id="clientPhone" name="clientPhone">
+                    </div>
+                    <div class="form-group">
+                        <label for="clientEmail">Email:</label>
+                        <input type="email" id="clientEmail" name="clientEmail">
+                    </div>
+                </div>
+            </section>
+
+            <!-- Items Section -->
+            <section class="section">
+                <h2>Items</h2>
+                <div class="items-container">
+                    <table id="itemsTable">
+                        <thead>
+                            <tr>
+                                <th>Description</th>
+                                <th>Quantity</th>
+                                <th>Unit Price</th>
+                                <th>Total</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="itemsTableBody">
+                            <!-- Items will be added dynamically -->
+                        </tbody>
+                    </table>
+                    <button type="button" id="addItemBtn" class="btn btn-secondary">Add Item</button>
+                </div>
+            </section>
+
+            <!-- Summary Section -->
+            <section class="section">
+                <h2>Summary</h2>
+                <div class="summary">
+                    <div class="summary-row">
+                        <span class="summary-label">Balance Due:</span>
+                        <span class="summary-value" id="balanceDue">$0.00</span>
+                    </div>
+                    <div class="payment-instructions">
+                        <strong>Payment Instructions:</strong> Due upon receipt
+                    </div>
+                </div>
+            </section>
+
+            <!-- Action Buttons -->
+            <div class="actions">
+                <button type="button" id="printBtn" class="btn btn-primary">Generate PDF</button>
+                <button type="button" id="clearBtn" class="btn btn-secondary">Clear Form</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Hidden invoice template for PDF generation -->
+    <div id="invoicePDF" style="position: absolute; left: -9999px; top: 0; width: 8.5in;">
+        <div class="invoice-pdf">
+            <div class="invoice-header">
+                <div class="invoice-title">INVOICE</div>
+                <div class="invoice-meta">
+                    <div><strong>Invoice #:</strong> <span id="pdf-invoice-number"></span></div>
+                    <div><strong>Date:</strong> <span id="pdf-invoice-date"></span></div>
+                </div>
+            </div>
+
+            <div class="invoice-addresses">
+                <div class="invoice-from">
+                    <div class="address-label">From:</div>
+                    <div id="pdf-my-name" class="address-name"></div>
+                    <div id="pdf-my-address" class="address-details"></div>
+                </div>
+                <div class="invoice-to">
+                    <div class="address-label">Bill To:</div>
+                    <div id="pdf-client-name" class="address-name"></div>
+                    <div id="pdf-client-company" class="address-company"></div>
+                    <div id="pdf-client-address" class="address-details"></div>
+                    <div id="pdf-client-contact" class="address-contact"></div>
+                </div>
+            </div>
+
+            <table class="invoice-items-table">
+                <thead>
+                    <tr>
+                        <th class="col-desc">Description</th>
+                        <th class="col-qty">Qty</th>
+                        <th class="col-price">Unit Price</th>
+                        <th class="col-total">Total</th>
+                    </tr>
+                </thead>
+                <tbody id="pdf-items-body">
+                </tbody>
+            </table>
+
+            <div class="invoice-footer">
+                <div class="invoice-total">
+                    <div class="total-row">
+                        <span class="total-label">Balance Due:</span>
+                        <span class="total-amount" id="pdf-balance-due"></span>
+                    </div>
+                </div>
+                <div class="invoice-payment">
+                    <strong>Payment Instructions:</strong> Due upon receipt
+                </div>
+            </div>
+        </div>
+    </div>
+    </form>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
