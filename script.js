@@ -11,28 +11,43 @@ function initializeInvoice() {
     const today = new Date().toISOString().split('T')[0];
     document.getElementById('invoiceDate').value = today;
 
-    // Initialize invoice number from localStorage
+    // Display the last invoice number (don't increment yet)
     let invoiceNumber = localStorage.getItem('lastInvoiceNumber');
     if (invoiceNumber === null) {
         invoiceNumber = 1;
     } else {
-        invoiceNumber = parseInt(invoiceNumber) + 1;
+        invoiceNumber = parseInt(invoiceNumber);
     }
-    localStorage.setItem('lastInvoiceNumber', invoiceNumber.toString());
     document.getElementById('invoiceNumber').value = invoiceNumber;
 
     // Load my information from localStorage (empty on first load)
     const savedMyName = localStorage.getItem('myName');
     const savedMyAddress = localStorage.getItem('myAddress');
+    const savedMyPhone = localStorage.getItem('myPhone');
+    const savedMyEmail = localStorage.getItem('myEmail');
     if (savedMyName) {
         document.getElementById('myName').value = savedMyName;
     }
     if (savedMyAddress) {
         document.getElementById('myAddress').value = savedMyAddress;
     }
+    if (savedMyPhone) {
+        document.getElementById('myPhone').value = savedMyPhone;
+    }
+    if (savedMyEmail) {
+        document.getElementById('myEmail').value = savedMyEmail;
+    }
 
-    // Add first item row
-    addItemRow();
+    // Add default items
+    addDefaultItems();
+}
+
+// Add default items on page load
+function addDefaultItems() {
+    addItemRow('DEPOSITION - ', 0, 5.50);
+    addItemRow('Appearance Fee', 1, 148.50);
+    addItemRow('Exhibits B/W', 0, 0.25);
+    addItemRow('Exhibits Color', 0, 1.00);
 }
 
 // Setup event listeners
@@ -70,9 +85,11 @@ function setupEventListeners() {
         });
     }
 
-    // Save my name and address to localStorage when changed
+    // Save my name, address, phone, and email to localStorage when changed
     const myNameInput = document.getElementById('myName');
     const myAddressInput = document.getElementById('myAddress');
+    const myPhoneInput = document.getElementById('myPhone');
+    const myEmailInput = document.getElementById('myEmail');
     
     if (myNameInput) {
         myNameInput.addEventListener('input', function() {
@@ -91,17 +108,52 @@ function setupEventListeners() {
             localStorage.setItem('myAddress', this.value);
         });
     }
+
+    if (myPhoneInput) {
+        myPhoneInput.addEventListener('input', function() {
+            localStorage.setItem('myPhone', this.value);
+        });
+        myPhoneInput.addEventListener('blur', function() {
+            localStorage.setItem('myPhone', this.value);
+        });
+    }
+
+    if (myEmailInput) {
+        myEmailInput.addEventListener('input', function() {
+            localStorage.setItem('myEmail', this.value);
+        });
+        myEmailInput.addEventListener('blur', function() {
+            localStorage.setItem('myEmail', this.value);
+        });
+    }
+
+    // Save invoice number to localStorage when manually changed
+    const invoiceNumberInput = document.getElementById('invoiceNumber');
+    if (invoiceNumberInput) {
+        invoiceNumberInput.addEventListener('blur', function() {
+            const value = parseInt(this.value);
+            if (!isNaN(value) && value > 0) {
+                localStorage.setItem('lastInvoiceNumber', value.toString());
+            }
+        });
+    }
 }
 
 // Add a new item row to the table
-function addItemRow() {
+function addItemRow(description = '', qty = 1, unitPrice = 0.00) {
     const tbody = document.getElementById('itemsTableBody');
     const row = document.createElement('tr');
+    row.draggable = true;
+    row.classList.add('draggable-row');
+    
+    // Escape HTML for the description value attribute
+    const escapedDescription = description.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     
     row.innerHTML = `
-        <td><input type="text" class="item-description" placeholder="Item description"></td>
-        <td><input type="number" class="item-qty" min="0" step="0.01" value="1" placeholder="Qty"></td>
-        <td><input type="number" class="item-unit-price" min="0" step="0.01" value="0.00" placeholder="0.00"></td>
+        <td class="drag-handle" title="Drag to reorder">⋮⋮</td>
+        <td><input type="text" class="item-description" placeholder="Item description" value="${escapedDescription}"></td>
+        <td><input type="number" class="item-qty" min="0" step="0.01" value="${qty}" placeholder="Qty"></td>
+        <td><input type="number" class="item-unit-price" min="0" step="0.01" value="${unitPrice}" placeholder="0.00"></td>
         <td class="item-total">$0.00</td>
         <td><button type="button" class="remove-btn">Remove</button></td>
     `;
@@ -120,8 +172,72 @@ function addItemRow() {
         calculateBalanceDue();
     });
     
+    // Set up drag and drop
+    setupDragAndDrop(row);
+    
     // Calculate initial total
     calculateItemTotal.call(qtyInput);
+}
+
+// Global variable to track the dragged row
+let draggedRow = null;
+
+// Setup drag and drop for a row
+function setupDragAndDrop(row) {
+    row.addEventListener('dragstart', function(e) {
+        draggedRow = this;
+        this.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/html', this.innerHTML);
+    });
+    
+    row.addEventListener('dragend', function(e) {
+        this.classList.remove('dragging');
+        // Remove all drag-over classes
+        document.querySelectorAll('#itemsTableBody tr').forEach(r => {
+            r.classList.remove('drag-over');
+        });
+        draggedRow = null;
+    });
+    
+    row.addEventListener('dragover', function(e) {
+        if (e.preventDefault) {
+            e.preventDefault();
+        }
+        e.dataTransfer.dropEffect = 'move';
+        
+        if (draggedRow && this !== draggedRow) {
+            const tbody = this.parentElement;
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+            const draggedIndex = rows.indexOf(draggedRow);
+            const targetIndex = rows.indexOf(this);
+            
+            if (draggedIndex < targetIndex) {
+                tbody.insertBefore(draggedRow, this.nextSibling);
+            } else {
+                tbody.insertBefore(draggedRow, this);
+            }
+        }
+        return false;
+    });
+    
+    row.addEventListener('dragenter', function(e) {
+        if (this !== draggedRow) {
+            this.classList.add('drag-over');
+        }
+    });
+    
+    row.addEventListener('dragleave', function(e) {
+        this.classList.remove('drag-over');
+    });
+    
+    row.addEventListener('drop', function(e) {
+        if (e.stopPropagation) {
+            e.stopPropagation();
+        }
+        this.classList.remove('drag-over');
+        return false;
+    });
 }
 
 // Calculate total for a single item
@@ -165,11 +281,25 @@ function generatePDF() {
         return;
     }
 
+    // Get the current invoice number from the field (may have been manually set)
+    let invoiceNumber = parseInt(document.getElementById('invoiceNumber').value);
+    
+    // Validate the invoice number
+    if (isNaN(invoiceNumber) || invoiceNumber < 1) {
+        // If invalid, get from localStorage or default to 1
+        const storedNumber = localStorage.getItem('lastInvoiceNumber');
+        invoiceNumber = storedNumber ? parseInt(storedNumber) : 1;
+        document.getElementById('invoiceNumber').value = invoiceNumber;
+    }
+    
+    // Use this number for the PDF (don't increment yet - increment after successful generation)
+
     // Get all form values
     const myName = document.getElementById('myName').value;
     const myAddress = document.getElementById('myAddress').value;
+    const myPhone = document.getElementById('myPhone').value;
+    const myEmail = document.getElementById('myEmail').value;
     const invoiceDate = document.getElementById('invoiceDate').value;
-    const invoiceNumber = document.getElementById('invoiceNumber').value;
     const clientName = document.getElementById('clientName').value;
     const clientCompany = document.getElementById('clientCompany').value;
     const clientAddress = document.getElementById('clientAddress').value;
@@ -241,6 +371,7 @@ function generatePDF() {
                     <div class="address-label">From:</div>
                     <div class="address-name">${escapeHtml(myName)}</div>
                     <div class="address-details">${formatMultilineAddress(myAddress)}</div>
+                    ${formatContactInfo(myPhone, myEmail)}
                 </div>
                 <div class="invoice-to">
                     <div class="address-label">Bill To:</div>
@@ -328,20 +459,62 @@ function generatePDF() {
 
         // Use the promise-based API with proper error handling
         const worker = html2pdf().set(opt).from(targetElement);
+        const filename = `Invoice_${invoiceNumber}_${invoiceDate}.pdf`;
         
-        worker.save().then(() => {
+        // Generate PDF as blob and show file picker
+        worker.outputPdf('blob').then((pdfBlob) => {
             // Remove temporary element
             if (document.body.contains(tempDiv)) {
                 document.body.removeChild(tempDiv);
             }
+            
+            // Try to use File System Access API for file picker (Chrome/Edge)
+            if ('showSaveFilePicker' in window) {
+                saveFileWithPicker(pdfBlob, filename).then(() => {
+                    handleSuccessfulPDFGeneration();
+                }).catch((error) => {
+                    // User cancelled or error - fall back to direct download
+                    if (error.name !== 'AbortError') {
+                        console.warn('File picker failed, falling back to direct download:', error);
+                        downloadFileDirectly(pdfBlob, filename);
+                        handleSuccessfulPDFGeneration();
+                    }
+                });
+            } else {
+                // Fall back to direct download for browsers without File System Access API
+                downloadFileDirectly(pdfBlob, filename);
+                handleSuccessfulPDFGeneration();
+            }
+        }).catch((error) => {
+            // Remove temporary element
+            if (document.body.contains(tempDiv)) {
+                document.body.removeChild(tempDiv);
+            }
+            console.error('Error generating PDF:', error);
+            alert('Error generating PDF: ' + (error.message || 'Unknown error'));
+        });
+
+        // Helper function to handle successful PDF generation
+        function handleSuccessfulPDFGeneration() {
             console.log('PDF generated successfully');
             
-            // Save my name and address to localStorage after successful PDF generation
+            // Increment invoice number after successful PDF generation
+            invoiceNumber = invoiceNumber + 1;
+            localStorage.setItem('lastInvoiceNumber', invoiceNumber.toString());
+            document.getElementById('invoiceNumber').value = invoiceNumber;
+            
+            // Save my name, address, phone, and email to localStorage after successful PDF generation
             if (myName) {
                 localStorage.setItem('myName', myName);
             }
             if (myAddress) {
                 localStorage.setItem('myAddress', myAddress);
+            }
+            if (myPhone) {
+                localStorage.setItem('myPhone', myPhone);
+            }
+            if (myEmail) {
+                localStorage.setItem('myEmail', myEmail);
             }
             
             // Save client address to address book after successful PDF generation
@@ -354,14 +527,7 @@ function generatePDF() {
                     email: clientEmail
                 });
             }
-        }).catch((error) => {
-            // Remove temporary element
-            if (document.body.contains(tempDiv)) {
-                document.body.removeChild(tempDiv);
-            }
-            console.error('Error generating PDF:', error);
-            alert('Error generating PDF: ' + (error.message || 'Unknown error'));
-        });
+        }
     }, 300);
 }
 
@@ -446,4 +612,33 @@ function fillClientForm(addressData) {
     document.getElementById('clientAddress').value = addressData.address || '';
     document.getElementById('clientPhone').value = addressData.phone || '';
     document.getElementById('clientEmail').value = addressData.email || '';
+}
+
+// Save file using File System Access API (shows file picker)
+async function saveFileWithPicker(blob, filename) {
+    const fileHandle = await window.showSaveFilePicker({
+        suggestedName: filename,
+        types: [{
+            description: 'PDF files',
+            accept: {
+                'application/pdf': ['.pdf']
+            }
+        }]
+    });
+    
+    const writable = await fileHandle.createWritable();
+    await writable.write(blob);
+    await writable.close();
+}
+
+// Fallback: Download file directly (for browsers without File System Access API)
+function downloadFileDirectly(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
 }

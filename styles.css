@@ -116,14 +116,45 @@ textarea {
     border: 1px solid #ddd;
 }
 
-/* Right-align Qty, Unit Price, Total headers and cells */
-#itemsTable th:nth-child(2),
+/* Right-align Qty, Unit Price, Total headers and cells (columns 3, 4, 5 after drag handle column) */
 #itemsTable th:nth-child(3),
 #itemsTable th:nth-child(4),
-#itemsTable td:nth-child(2),
+#itemsTable th:nth-child(5),
 #itemsTable td:nth-child(3),
-#itemsTable td:nth-child(4) {
+#itemsTable td:nth-child(4),
+#itemsTable td:nth-child(5) {
     text-align: right;
+}
+
+/* Drag handle styling */
+.drag-handle {
+    text-align: center;
+    vertical-align: middle;
+    width: 30px;
+    padding: 8px !important;
+    cursor: move;
+    color: #999;
+    font-size: 18px;
+    line-height: 1;
+    user-select: none;
+}
+
+.drag-handle:hover {
+    color: #4CAF50;
+}
+
+/* Draggable row styling */
+.draggable-row {
+    cursor: move;
+}
+
+.draggable-row.dragging {
+    opacity: 0.5;
+    background-color: #f0f0f0;
+}
+
+.draggable-row.drag-over {
+    border-top: 3px solid #4CAF50;
 }
 
 #itemsTable th {
@@ -246,6 +277,7 @@ textarea {
     .btn,
     #addItemBtn,
     .remove-btn,
+    .drag-handle,
     .actions {
         display: none;
     }
