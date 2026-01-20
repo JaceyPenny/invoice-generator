@@ -137,6 +137,45 @@ function setupEventListeners() {
             }
         });
     }
+
+    // Address book management modal
+    const manageAddressesBtn = document.getElementById('manageAddressesBtn');
+    const addressBookModal = document.getElementById('addressBookModal');
+    const modalCloseBtn = document.getElementById('modalCloseBtn');
+    const modalCancelBtn = document.getElementById('modalCancelBtn');
+    const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
+
+    if (manageAddressesBtn) {
+        manageAddressesBtn.addEventListener('click', openAddressBookModal);
+    }
+
+    if (modalCloseBtn) {
+        modalCloseBtn.addEventListener('click', closeAddressBookModal);
+    }
+
+    if (modalCancelBtn) {
+        modalCancelBtn.addEventListener('click', closeAddressBookModal);
+    }
+
+    if (deleteSelectedBtn) {
+        deleteSelectedBtn.addEventListener('click', deleteSelectedAddresses);
+    }
+
+    // Close modal when clicking outside
+    if (addressBookModal) {
+        addressBookModal.addEventListener('click', function(e) {
+            if (e.target === addressBookModal) {
+                closeAddressBookModal();
+            }
+        });
+    }
+
+    // Close modal on Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && addressBookModal && addressBookModal.classList.contains('show')) {
+            closeAddressBookModal();
+        }
+    });
 }
 
 // Add a new item row to the table
@@ -598,11 +637,98 @@ function updateAddressBookUI() {
     
     // Add saved addresses
     Object.keys(addressBook).sort().forEach(name => {
+        const client = addressBook[name];
         const option = document.createElement('option');
         option.value = name;
-        option.textContent = name;
+        // Display as "Client Name | Company Name" if company exists
+        option.textContent = client.company ? `${name} | ${client.company}` : name;
         select.appendChild(option);
     });
+}
+
+// Address book modal functions
+function openAddressBookModal() {
+    const modal = document.getElementById('addressBookModal');
+    const addressList = document.getElementById('addressList');
+    const noAddressesMsg = document.getElementById('noAddressesMsg');
+    const deleteBtn = document.getElementById('deleteSelectedBtn');
+    
+    // Get addresses and populate the list
+    const addressBook = getAddressBook();
+    const sortedNames = Object.keys(addressBook).sort();
+    
+    // Clear previous list
+    addressList.innerHTML = '';
+    
+    if (sortedNames.length === 0) {
+        noAddressesMsg.style.display = 'block';
+        addressList.style.display = 'none';
+    } else {
+        noAddressesMsg.style.display = 'none';
+        addressList.style.display = 'flex';
+        
+        sortedNames.forEach(name => {
+            const client = addressBook[name];
+            const item = document.createElement('label');
+            item.className = 'address-item';
+            item.innerHTML = `
+                <input type="checkbox" value="${escapeHtml(name)}" class="address-checkbox">
+                <div class="address-item-details">
+                    <div class="address-item-name">${escapeHtml(name)}</div>
+                    ${client.company ? `<div class="address-item-company">${escapeHtml(client.company)}</div>` : ''}
+                </div>
+            `;
+            addressList.appendChild(item);
+        });
+        
+        // Add event listeners for checkboxes to enable/disable delete button
+        addressList.querySelectorAll('.address-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', updateDeleteButtonState);
+        });
+    }
+    
+    // Reset delete button state
+    deleteBtn.disabled = true;
+    
+    // Show modal
+    modal.classList.add('show');
+}
+
+function closeAddressBookModal() {
+    const modal = document.getElementById('addressBookModal');
+    modal.classList.remove('show');
+}
+
+function updateDeleteButtonState() {
+    const deleteBtn = document.getElementById('deleteSelectedBtn');
+    const checkboxes = document.querySelectorAll('.address-checkbox:checked');
+    deleteBtn.disabled = checkboxes.length === 0;
+}
+
+function deleteSelectedAddresses() {
+    const checkboxes = document.querySelectorAll('.address-checkbox:checked');
+    const selectedNames = Array.from(checkboxes).map(cb => cb.value);
+    
+    if (selectedNames.length === 0) return;
+    
+    const confirmMsg = selectedNames.length === 1 
+        ? `Are you sure you want to delete "${selectedNames[0]}"?`
+        : `Are you sure you want to delete ${selectedNames.length} addresses?`;
+    
+    if (!confirm(confirmMsg)) return;
+    
+    // Get current address book and remove selected
+    const addressBook = getAddressBook();
+    selectedNames.forEach(name => {
+        delete addressBook[name];
+    });
+    
+    // Save updated address book
+    localStorage.setItem('clientAddressBook', JSON.stringify(addressBook));
+    
+    // Update the dropdown and refresh the modal
+    updateAddressBookUI();
+    openAddressBookModal(); // Refresh the modal content
 }
 
 function fillClientForm(addressData) {

@@ -57,9 +57,12 @@
                 <h2>Client Details</h2>
                 <div class="form-group">
                     <label for="addressBookSelect">Saved Addresses:</label>
-                    <select id="addressBookSelect" class="form-control">
-                        <option value="">Select a saved address...</option>
-                    </select>
+                    <div class="address-book-row">
+                        <select id="addressBookSelect" class="form-control">
+                            <option value="">Select a saved address...</option>
+                        </select>
+                        <button type="button" id="manageAddressesBtn" class="btn btn-manage" title="Manage saved addresses">Manage</button>
+                    </div>
                 </div>
                 <div class="form-group">
                     <label for="clientName">Client Name:</label>
@@ -183,6 +186,28 @@
         </div>
     </div>
     </form>
+    </div>
+
+    <!-- Address Book Management Modal -->
+    <div id="addressBookModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Manage Saved Addresses</h3>
+                <button type="button" class="modal-close" id="modalCloseBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="addressList" class="address-list">
+                    <!-- Addresses will be populated here -->
+                </div>
+                <div id="noAddressesMsg" class="no-addresses" style="display: none;">
+                    No saved addresses found.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="deleteSelectedBtn" class="btn btn-danger" disabled>Delete Selected</button>
+                <button type="button" id="modalCancelBtn" class="btn btn-secondary">Close</button>
+            </div>
+        </div>
     </div>
 
     <script src="script.js"></script>
