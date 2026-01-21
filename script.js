@@ -853,7 +853,7 @@ function openPrefillItemsModal() {
     document.getElementById('depoName').value = '';
     document.getElementById('depoPages').value = '0';
     document.getElementById('depoRate').value = '5.50';
-    document.getElementById('depoCopies').value = '0';
+    document.getElementById('depoWorkersComp').checked = false;
     document.getElementById('depoCopyRate').value = '0.95';
     document.getElementById('depoExtra').value = '';
     document.getElementById('appearanceHours').value = '3';
@@ -877,7 +877,7 @@ function applyPrefillItems() {
     const depoName = document.getElementById('depoName').value.trim();
     const depoPages = parseInt(document.getElementById('depoPages').value) || 0;
     const depoRate = parseFloat(document.getElementById('depoRate').value) || 0;
-    const depoCopies = parseInt(document.getElementById('depoCopies').value) || 0;
+    const depoWorkersComp = document.getElementById('depoWorkersComp').checked;
     const depoCopyRate = parseFloat(document.getElementById('depoCopyRate').value) || 0;
     const depoExtra = document.getElementById('depoExtra').value.trim();
     
@@ -910,8 +910,8 @@ function applyPrefillItems() {
     if (depoExtra) {
         depoDescription += ` - ${depoExtra}`;
     }
-    // Calculate final page rate: base rate + (copies * copy rate)
-    const finalDepoRate = depoRate + (depoCopies * depoCopyRate);
+    // Calculate final page rate: base rate + worker's comp rate if checked
+    const finalDepoRate = depoRate + (depoWorkersComp ? depoCopyRate : 0);
     addItemRow(depoDescription, depoPages, finalDepoRate);
     
     // 2. Add Appearance Fee item
