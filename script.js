@@ -956,7 +956,7 @@ function openPrefillCopyModal() {
     // Reset other fields to defaults
     document.getElementById('copyDepoName').value = '';
     document.getElementById('copyDepoPages').value = '0';
-    document.getElementById('copyDepoRate').value = '2.25';
+    document.getElementById('copyDepoRate').value = '1.95';
     document.getElementById('copyDepoExtra').value = '';
     document.getElementById('copyExhibitsBW').value = '0';
     document.getElementById('copyExhibitsBWRate').value = '0.25';
