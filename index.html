@@ -35,6 +35,10 @@
                         <input type="email" id="myEmail" name="myEmail">
                     </div>
                 </div>
+                <div class="form-group">
+                    <label for="checksPayableName">Checks Payable To:</label>
+                    <input type="text" id="checksPayableName" name="checksPayableName">
+                </div>
             </section>
 
             <!-- Invoice Details Section -->
@@ -88,6 +92,15 @@
                 </div>
             </section>
 
+            <!-- Case Information Section -->
+            <section class="section">
+                <h2>Case Information</h2>
+                <div class="form-group">
+                    <label for="caseInfo">Case Details:</label>
+                    <textarea id="caseInfo" name="caseInfo" rows="2" placeholder="e.g., Case Name, Case Number, Court, etc." required></textarea>
+                </div>
+            </section>
+
             <!-- Items Section -->
             <section class="section">
                 <h2>Items</h2>
@@ -108,7 +121,8 @@
                         </tbody>
                     </table>
                     <div class="items-buttons">
-                        <button type="button" id="prefillItemsBtn" class="btn btn-primary">Pre-fill Items</button>
+                        <button type="button" id="prefillItemsBtn" class="btn btn-primary">Pre-fill Deposition</button>
+                        <button type="button" id="prefillCopyBtn" class="btn btn-primary">Pre-fill Copy</button>
                         <button type="button" id="addItemBtn" class="btn btn-secondary">Add Item</button>
                     </div>
                 </div>
@@ -166,8 +180,6 @@
                 <thead>
                     <tr>
                         <th class="col-desc">Description</th>
-                        <th class="col-qty">Qty</th>
-                        <th class="col-price">Unit Price</th>
                         <th class="col-total">Total</th>
                     </tr>
                 </thead>
@@ -213,11 +225,11 @@
         </div>
     </div>
 
-    <!-- Pre-fill Items Modal -->
+    <!-- Pre-fill Deposition Modal -->
     <div id="prefillItemsModal" class="modal">
         <div class="modal-content modal-wide">
             <div class="modal-header">
-                <h3>Pre-fill Invoice Items</h3>
+                <h3>Pre-fill Deposition Invoice</h3>
                 <button type="button" class="modal-close" id="prefillModalCloseBtn">&times;</button>
             </div>
             <div class="modal-body">
@@ -242,6 +254,16 @@
                         <div class="form-group">
                             <label for="depoRate">Page Rate ($):</label>
                             <input type="number" id="depoRate" name="depoRate" min="0" step="0.01" value="5.50">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="depoCopies">Number of Copies:</label>
+                            <input type="number" id="depoCopies" name="depoCopies" min="0" step="1" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="depoCopyRate">Copy Page Rate ($):</label>
+                            <input type="number" id="depoCopyRate" name="depoCopyRate" min="0" step="0.01" value="0.95">
                         </div>
                     </div>
                     <div class="form-group">
@@ -294,6 +316,75 @@
             <div class="modal-footer">
                 <button type="button" id="prefillApplyBtn" class="btn btn-primary">Apply to Invoice</button>
                 <button type="button" id="prefillCancelBtn" class="btn btn-secondary">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pre-fill Copy Modal -->
+    <div id="prefillCopyModal" class="modal">
+        <div class="modal-content modal-wide">
+            <div class="modal-header">
+                <h3>Pre-fill Copy of Deposition Invoice</h3>
+                <button type="button" class="modal-close" id="copyModalCloseBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <!-- Deposition Section -->
+                <div class="prefill-section">
+                    <h4>Copy of Deposition Details</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="copyDepoDate">Date of Deposition:</label>
+                            <input type="date" id="copyDepoDate" name="copyDepoDate">
+                        </div>
+                        <div class="form-group">
+                            <label for="copyDepoName">Name of Deposed:</label>
+                            <input type="text" id="copyDepoName" name="copyDepoName" placeholder="e.g., John Smith">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="copyDepoPages">Number of Pages:</label>
+                            <input type="number" id="copyDepoPages" name="copyDepoPages" min="0" step="1" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="copyDepoRate">Page Rate ($):</label>
+                            <input type="number" id="copyDepoRate" name="copyDepoRate" min="0" step="0.01" value="2.25">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="copyDepoExtra">Extra Information (optional):</label>
+                        <input type="text" id="copyDepoExtra" name="copyDepoExtra" placeholder="e.g., expedited, rough draft">
+                    </div>
+                </div>
+
+                <!-- Exhibits Section -->
+                <div class="prefill-section">
+                    <h4>Exhibits</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="copyExhibitsBW">Black & White Pages:</label>
+                            <input type="number" id="copyExhibitsBW" name="copyExhibitsBW" min="0" step="1" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="copyExhibitsBWRate">B&W Rate ($):</label>
+                            <input type="number" id="copyExhibitsBWRate" name="copyExhibitsBWRate" min="0" step="0.01" value="0.25">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="copyExhibitsColor">Color Pages:</label>
+                            <input type="number" id="copyExhibitsColor" name="copyExhibitsColor" min="0" step="1" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="copyExhibitsColorRate">Color Rate ($):</label>
+                            <input type="number" id="copyExhibitsColorRate" name="copyExhibitsColorRate" min="0" step="0.01" value="1.00">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="copyApplyBtn" class="btn btn-primary">Apply to Invoice</button>
+                <button type="button" id="copyCancelBtn" class="btn btn-secondary">Cancel</button>
             </div>
         </div>
     </div>

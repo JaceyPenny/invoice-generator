@@ -25,6 +25,7 @@ function initializeInvoice() {
     const savedMyAddress = localStorage.getItem('myAddress');
     const savedMyPhone = localStorage.getItem('myPhone');
     const savedMyEmail = localStorage.getItem('myEmail');
+    const savedChecksPayableName = localStorage.getItem('checksPayableName');
     if (savedMyName) {
         document.getElementById('myName').value = savedMyName;
     }
@@ -36,6 +37,9 @@ function initializeInvoice() {
     }
     if (savedMyEmail) {
         document.getElementById('myEmail').value = savedMyEmail;
+    }
+    if (savedChecksPayableName) {
+        document.getElementById('checksPayableName').value = savedChecksPayableName;
     }
 
     // Add one empty item row to start
@@ -79,11 +83,12 @@ function setupEventListeners() {
         });
     }
 
-    // Save my name, address, phone, and email to localStorage when changed
+    // Save my name, address, phone, email, and checks payable name to localStorage when changed
     const myNameInput = document.getElementById('myName');
     const myAddressInput = document.getElementById('myAddress');
     const myPhoneInput = document.getElementById('myPhone');
     const myEmailInput = document.getElementById('myEmail');
+    const checksPayableNameInput = document.getElementById('checksPayableName');
     
     if (myNameInput) {
         myNameInput.addEventListener('input', function() {
@@ -118,6 +123,15 @@ function setupEventListeners() {
         });
         myEmailInput.addEventListener('blur', function() {
             localStorage.setItem('myEmail', this.value);
+        });
+    }
+
+    if (checksPayableNameInput) {
+        checksPayableNameInput.addEventListener('input', function() {
+            localStorage.setItem('checksPayableName', this.value);
+        });
+        checksPayableNameInput.addEventListener('blur', function() {
+            localStorage.setItem('checksPayableName', this.value);
         });
     }
 
@@ -174,6 +188,10 @@ function setupEventListeners() {
             if (prefillModal && prefillModal.classList.contains('show')) {
                 closePrefillItemsModal();
             }
+            const copyModal = document.getElementById('prefillCopyModal');
+            if (copyModal && copyModal.classList.contains('show')) {
+                closePrefillCopyModal();
+            }
         }
     });
 
@@ -208,13 +226,45 @@ function setupEventListeners() {
             }
         });
     }
+
+    // Pre-fill copy modal
+    const prefillCopyBtn = document.getElementById('prefillCopyBtn');
+    const prefillCopyModal = document.getElementById('prefillCopyModal');
+    const copyModalCloseBtn = document.getElementById('copyModalCloseBtn');
+    const copyCancelBtn = document.getElementById('copyCancelBtn');
+    const copyApplyBtn = document.getElementById('copyApplyBtn');
+
+    if (prefillCopyBtn) {
+        prefillCopyBtn.addEventListener('click', openPrefillCopyModal);
+    }
+
+    if (copyModalCloseBtn) {
+        copyModalCloseBtn.addEventListener('click', closePrefillCopyModal);
+    }
+
+    if (copyCancelBtn) {
+        copyCancelBtn.addEventListener('click', closePrefillCopyModal);
+    }
+
+    if (copyApplyBtn) {
+        copyApplyBtn.addEventListener('click', applyPrefillCopyItems);
+    }
+
+    // Close copy modal when clicking outside
+    if (prefillCopyModal) {
+        prefillCopyModal.addEventListener('click', function(e) {
+            if (e.target === prefillCopyModal) {
+                closePrefillCopyModal();
+            }
+        });
+    }
 }
 
 // Add a new item row to the table
 function addItemRow(description = '', qty = 1, unitPrice = 0.00) {
     const tbody = document.getElementById('itemsTableBody');
     const row = document.createElement('tr');
-    row.draggable = true;
+    row.draggable = false; // Only drag handle should initiate drag
     row.classList.add('draggable-row');
     
     // Escape HTML for the description value attribute
@@ -255,6 +305,20 @@ let draggedRow = null;
 
 // Setup drag and drop for a row
 function setupDragAndDrop(row) {
+    const dragHandle = row.querySelector('.drag-handle');
+    
+    // Only enable dragging when mousedown on drag handle
+    if (dragHandle) {
+        dragHandle.addEventListener('mousedown', function(e) {
+            row.draggable = true;
+        });
+        
+        // Disable dragging on mouseup on the handle (click without drag)
+        dragHandle.addEventListener('mouseup', function(e) {
+            row.draggable = false;
+        });
+    }
+    
     row.addEventListener('dragstart', function(e) {
         draggedRow = this;
         this.classList.add('dragging');
@@ -264,6 +328,7 @@ function setupDragAndDrop(row) {
     
     row.addEventListener('dragend', function(e) {
         this.classList.remove('dragging');
+        this.draggable = false; // Disable dragging after drop
         // Remove all drag-over classes
         document.querySelectorAll('#itemsTableBody tr').forEach(r => {
             r.classList.remove('drag-over');
@@ -370,12 +435,14 @@ function generatePDF() {
     const myAddress = document.getElementById('myAddress').value;
     const myPhone = document.getElementById('myPhone').value;
     const myEmail = document.getElementById('myEmail').value;
+    const checksPayableName = document.getElementById('checksPayableName').value;
     const invoiceDate = document.getElementById('invoiceDate').value;
     const clientName = document.getElementById('clientName').value;
     const clientCompany = document.getElementById('clientCompany').value;
     const clientAddress = document.getElementById('clientAddress').value;
     const clientPhone = document.getElementById('clientPhone').value;
     const clientEmail = document.getElementById('clientEmail').value;
+    const caseInfo = document.getElementById('caseInfo').value;
     const balanceDue = document.getElementById('balanceDue').textContent;
 
     // Format date - parse in local timezone to avoid day shift
@@ -406,8 +473,6 @@ function generatePDF() {
             itemsHTML += `
                 <tr>
                     <td>${escapeHtml(description)}</td>
-                    <td style="text-align: right;">${qty}</td>
-                    <td style="text-align: right;">${formatCurrency(unitPrice)}</td>
                     <td style="text-align: right;">${formatCurrency(total)}</td>
                 </tr>
             `;
@@ -454,12 +519,12 @@ function generatePDF() {
                 </div>
             </div>
             
+            ${caseInfo ? `<div class="invoice-case-info"><strong>Case Information:</strong> ${formatMultilineAddress(caseInfo)}</div>` : ''}
+            
             <table class="invoice-items-table">
                 <thead>
                     <tr>
                         <th class="col-desc">Description</th>
-                        <th class="col-qty">Qty</th>
-                        <th class="col-price">Unit Price</th>
                         <th class="col-total">Total</th>
                     </tr>
                 </thead>
@@ -476,7 +541,7 @@ function generatePDF() {
                     </div>
                 </div>
                 <div class="invoice-payment">
-                    <strong>Payment Instructions:</strong> Due upon receipt
+                    <strong>Payment Instructions:</strong> Due upon receipt.${checksPayableName ? ` Please make checks payable to ${escapeHtml(checksPayableName)}.` : ''}
                 </div>
             </div>
         </div>
@@ -587,6 +652,9 @@ function generatePDF() {
             }
             if (myEmail) {
                 localStorage.setItem('myEmail', myEmail);
+            }
+            if (checksPayableName) {
+                localStorage.setItem('checksPayableName', checksPayableName);
             }
             
             // Save client address to address book after successful PDF generation
@@ -785,6 +853,8 @@ function openPrefillItemsModal() {
     document.getElementById('depoName').value = '';
     document.getElementById('depoPages').value = '0';
     document.getElementById('depoRate').value = '5.50';
+    document.getElementById('depoCopies').value = '0';
+    document.getElementById('depoCopyRate').value = '0.95';
     document.getElementById('depoExtra').value = '';
     document.getElementById('appearanceHours').value = '3';
     document.getElementById('appearanceRate').value = '49.50';
@@ -807,6 +877,8 @@ function applyPrefillItems() {
     const depoName = document.getElementById('depoName').value.trim();
     const depoPages = parseInt(document.getElementById('depoPages').value) || 0;
     const depoRate = parseFloat(document.getElementById('depoRate').value) || 0;
+    const depoCopies = parseInt(document.getElementById('depoCopies').value) || 0;
+    const depoCopyRate = parseFloat(document.getElementById('depoCopyRate').value) || 0;
     const depoExtra = document.getElementById('depoExtra').value.trim();
     
     const appearanceHours = parseFloat(document.getElementById('appearanceHours').value) || 0;
@@ -838,7 +910,9 @@ function applyPrefillItems() {
     if (depoExtra) {
         depoDescription += ` - ${depoExtra}`;
     }
-    addItemRow(depoDescription, depoPages, depoRate);
+    // Calculate final page rate: base rate + (copies * copy rate)
+    const finalDepoRate = depoRate + (depoCopies * depoCopyRate);
+    addItemRow(depoDescription, depoPages, finalDepoRate);
     
     // 2. Add Appearance Fee item
     const billedHours = Math.max(appearanceHours, 3); // Minimum 3 hours
@@ -869,6 +943,89 @@ function applyPrefillItems() {
     
     // Close modal
     closePrefillItemsModal();
+}
+
+// Pre-fill copy modal functions
+function openPrefillCopyModal() {
+    const modal = document.getElementById('prefillCopyModal');
+    
+    // Set default deposition date to today
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('copyDepoDate').value = today;
+    
+    // Reset other fields to defaults
+    document.getElementById('copyDepoName').value = '';
+    document.getElementById('copyDepoPages').value = '0';
+    document.getElementById('copyDepoRate').value = '2.25';
+    document.getElementById('copyDepoExtra').value = '';
+    document.getElementById('copyExhibitsBW').value = '0';
+    document.getElementById('copyExhibitsBWRate').value = '0.25';
+    document.getElementById('copyExhibitsColor').value = '0';
+    document.getElementById('copyExhibitsColorRate').value = '1.00';
+    
+    modal.classList.add('show');
+}
+
+function closePrefillCopyModal() {
+    const modal = document.getElementById('prefillCopyModal');
+    modal.classList.remove('show');
+}
+
+function applyPrefillCopyItems() {
+    // Get form values
+    const depoDate = document.getElementById('copyDepoDate').value;
+    const depoName = document.getElementById('copyDepoName').value.trim();
+    const depoPages = parseInt(document.getElementById('copyDepoPages').value) || 0;
+    const depoRate = parseFloat(document.getElementById('copyDepoRate').value) || 0;
+    const depoExtra = document.getElementById('copyDepoExtra').value.trim();
+    
+    const exhibitsBW = parseInt(document.getElementById('copyExhibitsBW').value) || 0;
+    const exhibitsBWRate = parseFloat(document.getElementById('copyExhibitsBWRate').value) || 0;
+    const exhibitsColor = parseInt(document.getElementById('copyExhibitsColor').value) || 0;
+    const exhibitsColorRate = parseFloat(document.getElementById('copyExhibitsColorRate').value) || 0;
+    
+    // Clear existing items
+    const tbody = document.getElementById('itemsTableBody');
+    tbody.innerHTML = '';
+    
+    // 1. Add Copy of Deposition item
+    let depoDescription = 'COPY OF DEPOSITION';
+    if (depoDate) {
+        // Format date as MM/DD/YY
+        const [year, month, day] = depoDate.split('-');
+        const shortYear = year.slice(-2);
+        depoDescription += ` ${month}/${day}/${shortYear}`;
+    }
+    if (depoName) {
+        depoDescription += ` - ${depoName}`;
+    }
+    if (depoPages > 0) {
+        depoDescription += ` - ${depoPages} pages`;
+    }
+    if (depoExtra) {
+        depoDescription += ` - ${depoExtra}`;
+    }
+    addItemRow(depoDescription, depoPages, depoRate);
+    
+    // 2. Add Exhibits item (only if there are any exhibits)
+    if (exhibitsBW > 0 || exhibitsColor > 0) {
+        let exhibitsDescription;
+        if (exhibitsBW > 0 && exhibitsColor > 0) {
+            exhibitsDescription = `Exhibits ${exhibitsBW} BW / ${exhibitsColor} Color`;
+        } else if (exhibitsBW > 0) {
+            exhibitsDescription = `Exhibits ${exhibitsBW} BW`;
+        } else {
+            exhibitsDescription = `Exhibits ${exhibitsColor} Color`;
+        }
+        const exhibitsTotal = (exhibitsBW * exhibitsBWRate) + (exhibitsColor * exhibitsColorRate);
+        addItemRow(exhibitsDescription, 1, exhibitsTotal);
+    }
+    
+    // Recalculate totals
+    calculateBalanceDue();
+    
+    // Close modal
+    closePrefillCopyModal();
 }
 
 // Save file using File System Access API (shows file picker)

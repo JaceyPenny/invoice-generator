@@ -12,7 +12,7 @@ body {
 }
 
 .container {
-    max-width: 900px;
+    max-width: 1100px;
     margin: 0 auto;
     background-color: white;
     padding: 30px;
@@ -102,6 +102,7 @@ textarea {
     border-collapse: collapse;
     margin-bottom: 15px;
     background-color: white;
+    table-layout: fixed;
 }
 
 #itemsTable thead {
@@ -114,6 +115,47 @@ textarea {
     padding: 12px;
     text-align: left;
     border: 1px solid #ddd;
+}
+
+/* Column widths for items table */
+#itemsTable th:nth-child(1),
+#itemsTable td:nth-child(1) {
+    width: 30px;
+}
+
+#itemsTable th:nth-child(2),
+#itemsTable td:nth-child(2) {
+    width: auto;
+    /* Description - takes remaining space */
+}
+
+#itemsTable th:nth-child(3),
+#itemsTable td:nth-child(3) {
+    width: 80px;
+    /* Quantity */
+}
+
+#itemsTable th:nth-child(4),
+#itemsTable td:nth-child(4) {
+    width: 100px;
+    /* Unit Price */
+}
+
+#itemsTable th:nth-child(5),
+#itemsTable td:nth-child(5) {
+    width: 100px;
+    /* Total */
+}
+
+#itemsTable th:nth-child(6),
+#itemsTable td:nth-child(6) {
+    width: 90px;
+    /* Action */
+    text-align: center;
+}
+
+#itemsTable .remove-btn {
+    display: inline-block;
 }
 
 /* Right-align Qty, Unit Price, Total headers and cells (columns 3, 4, 5 after drag handle column) */
@@ -347,6 +389,15 @@ textarea {
     margin-bottom: 40px;
 }
 
+.invoice-case-info {
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 15px;
+    text-align: left;
+    width: 100%;
+    line-height: 1.5;
+}
+
 .invoice-from,
 .invoice-to {
     flex: 1;
@@ -420,28 +471,16 @@ textarea {
 }
 
 .col-desc {
-    width: 50%;
-}
-
-.col-qty {
-    width: 12%;
-    text-align: right;
-}
-
-.col-price {
-    width: 19%;
-    text-align: right;
+    width: 75%;
 }
 
 .col-total {
-    width: 19%;
+    width: 25%;
     text-align: right;
     font-weight: 600;
 }
 
-/* Right-align table headers for Qty, Unit Price, Total */
-.invoice-items-table th.col-qty,
-.invoice-items-table th.col-price,
+/* Right-align Total header */
 .invoice-items-table th.col-total {
     text-align: right;
 }
@@ -486,7 +525,7 @@ textarea {
 }
 
 .invoice-payment {
-    text-align: center;
+    text-align: left;
     font-size: 14px;
     color: #555;
     padding: 15px;
@@ -537,8 +576,13 @@ textarea {
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 .modal-content {
@@ -558,6 +602,7 @@ textarea {
         transform: translateY(-20px);
         opacity: 0;
     }
+
     to {
         transform: translateY(0);
         opacity: 1;
