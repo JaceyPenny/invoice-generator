@@ -676,3 +676,53 @@ textarea {
     background-color: #ccc;
     cursor: not-allowed;
 }
+
+/* Items buttons row */
+.items-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+/* Wide modal for pre-fill items */
+.modal-wide {
+    max-width: 600px;
+}
+
+/* Pre-fill sections */
+.prefill-section {
+    margin-bottom: 24px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.prefill-section:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.prefill-section h4 {
+    margin: 0 0 15px 0;
+    color: #4CAF50;
+    font-size: 1.1em;
+    font-weight: 600;
+}
+
+.prefill-section .form-group {
+    margin-bottom: 12px;
+}
+
+.prefill-section .form-row {
+    margin-bottom: 0;
+}
+
+.prefill-section .form-row .form-group {
+    margin-bottom: 12px;
+}
+
+.form-hint {
+    font-size: 12px;
+    color: #888;
+    margin-top: 8px;
+    font-style: italic;
+}

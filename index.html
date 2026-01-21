@@ -107,7 +107,10 @@
                             <!-- Items will be added dynamically -->
                         </tbody>
                     </table>
-                    <button type="button" id="addItemBtn" class="btn btn-secondary">Add Item</button>
+                    <div class="items-buttons">
+                        <button type="button" id="prefillItemsBtn" class="btn btn-primary">Pre-fill Items</button>
+                        <button type="button" id="addItemBtn" class="btn btn-secondary">Add Item</button>
+                    </div>
                 </div>
             </section>
 
@@ -206,6 +209,91 @@
             <div class="modal-footer">
                 <button type="button" id="deleteSelectedBtn" class="btn btn-danger" disabled>Delete Selected</button>
                 <button type="button" id="modalCancelBtn" class="btn btn-secondary">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pre-fill Items Modal -->
+    <div id="prefillItemsModal" class="modal">
+        <div class="modal-content modal-wide">
+            <div class="modal-header">
+                <h3>Pre-fill Invoice Items</h3>
+                <button type="button" class="modal-close" id="prefillModalCloseBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <!-- Deposition Section -->
+                <div class="prefill-section">
+                    <h4>Deposition Details</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="depoDate">Date of Deposition:</label>
+                            <input type="date" id="depoDate" name="depoDate">
+                        </div>
+                        <div class="form-group">
+                            <label for="depoName">Name of Deposed:</label>
+                            <input type="text" id="depoName" name="depoName" placeholder="e.g., John Smith">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="depoPages">Number of Pages:</label>
+                            <input type="number" id="depoPages" name="depoPages" min="0" step="1" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="depoRate">Page Rate ($):</label>
+                            <input type="number" id="depoRate" name="depoRate" min="0" step="0.01" value="5.50">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="depoExtra">Extra Information (optional):</label>
+                        <input type="text" id="depoExtra" name="depoExtra" placeholder="e.g., expedited, rough draft">
+                    </div>
+                </div>
+
+                <!-- Appearance Fee Section -->
+                <div class="prefill-section">
+                    <h4>Appearance Fee</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="appearanceHours">Hours Worked:</label>
+                            <input type="number" id="appearanceHours" name="appearanceHours" min="0" step="0.5" value="3">
+                        </div>
+                        <div class="form-group">
+                            <label for="appearanceRate">Rate per Hour ($):</label>
+                            <input type="number" id="appearanceRate" name="appearanceRate" min="0" step="0.01" value="49.50">
+                        </div>
+                    </div>
+                    <p class="form-hint">Note: Minimum billing is 3 hours. If less than 3 hours entered, 3 hours will be billed.</p>
+                </div>
+
+                <!-- Exhibits Section -->
+                <div class="prefill-section">
+                    <h4>Exhibits</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="exhibitsBW">Black & White Pages:</label>
+                            <input type="number" id="exhibitsBW" name="exhibitsBW" min="0" step="1" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="exhibitsBWRate">B&W Rate ($):</label>
+                            <input type="number" id="exhibitsBWRate" name="exhibitsBWRate" min="0" step="0.01" value="0.25">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="exhibitsColor">Color Pages:</label>
+                            <input type="number" id="exhibitsColor" name="exhibitsColor" min="0" step="1" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="exhibitsColorRate">Color Rate ($):</label>
+                            <input type="number" id="exhibitsColorRate" name="exhibitsColorRate" min="0" step="0.01" value="1.00">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="prefillApplyBtn" class="btn btn-primary">Apply to Invoice</button>
+                <button type="button" id="prefillCancelBtn" class="btn btn-secondary">Cancel</button>
             </div>
         </div>
     </div>

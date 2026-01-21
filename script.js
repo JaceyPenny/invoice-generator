@@ -38,16 +38,8 @@ function initializeInvoice() {
         document.getElementById('myEmail').value = savedMyEmail;
     }
 
-    // Add default items
-    addDefaultItems();
-}
-
-// Add default items on page load
-function addDefaultItems() {
-    addItemRow('DEPOSITION - ', 0, 5.50);
-    addItemRow('Appearance Fee', 1, 148.50);
-    addItemRow('Exhibits B/W', 0, 0.25);
-    addItemRow('Exhibits Color', 0, 1.00);
+    // Add one empty item row to start
+    addItemRow();
 }
 
 // Setup event listeners
@@ -174,10 +166,48 @@ function setupEventListeners() {
 
     // Close modal on Escape key
     document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && addressBookModal && addressBookModal.classList.contains('show')) {
-            closeAddressBookModal();
+        if (e.key === 'Escape') {
+            if (addressBookModal && addressBookModal.classList.contains('show')) {
+                closeAddressBookModal();
+            }
+            const prefillModal = document.getElementById('prefillItemsModal');
+            if (prefillModal && prefillModal.classList.contains('show')) {
+                closePrefillItemsModal();
+            }
         }
     });
+
+    // Pre-fill items modal
+    const prefillItemsBtn = document.getElementById('prefillItemsBtn');
+    const prefillItemsModal = document.getElementById('prefillItemsModal');
+    const prefillModalCloseBtn = document.getElementById('prefillModalCloseBtn');
+    const prefillCancelBtn = document.getElementById('prefillCancelBtn');
+    const prefillApplyBtn = document.getElementById('prefillApplyBtn');
+
+    if (prefillItemsBtn) {
+        prefillItemsBtn.addEventListener('click', openPrefillItemsModal);
+    }
+
+    if (prefillModalCloseBtn) {
+        prefillModalCloseBtn.addEventListener('click', closePrefillItemsModal);
+    }
+
+    if (prefillCancelBtn) {
+        prefillCancelBtn.addEventListener('click', closePrefillItemsModal);
+    }
+
+    if (prefillApplyBtn) {
+        prefillApplyBtn.addEventListener('click', applyPrefillItems);
+    }
+
+    // Close pre-fill modal when clicking outside
+    if (prefillItemsModal) {
+        prefillItemsModal.addEventListener('click', function(e) {
+            if (e.target === prefillItemsModal) {
+                closePrefillItemsModal();
+            }
+        });
+    }
 }
 
 // Add a new item row to the table
@@ -741,6 +771,104 @@ function fillClientForm(addressData) {
     document.getElementById('clientAddress').value = addressData.address || '';
     document.getElementById('clientPhone').value = addressData.phone || '';
     document.getElementById('clientEmail').value = addressData.email || '';
+}
+
+// Pre-fill items modal functions
+function openPrefillItemsModal() {
+    const modal = document.getElementById('prefillItemsModal');
+    
+    // Set default deposition date to today
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('depoDate').value = today;
+    
+    // Reset other fields to defaults
+    document.getElementById('depoName').value = '';
+    document.getElementById('depoPages').value = '0';
+    document.getElementById('depoRate').value = '5.50';
+    document.getElementById('depoExtra').value = '';
+    document.getElementById('appearanceHours').value = '3';
+    document.getElementById('appearanceRate').value = '49.50';
+    document.getElementById('exhibitsBW').value = '0';
+    document.getElementById('exhibitsBWRate').value = '0.25';
+    document.getElementById('exhibitsColor').value = '0';
+    document.getElementById('exhibitsColorRate').value = '1.00';
+    
+    modal.classList.add('show');
+}
+
+function closePrefillItemsModal() {
+    const modal = document.getElementById('prefillItemsModal');
+    modal.classList.remove('show');
+}
+
+function applyPrefillItems() {
+    // Get form values
+    const depoDate = document.getElementById('depoDate').value;
+    const depoName = document.getElementById('depoName').value.trim();
+    const depoPages = parseInt(document.getElementById('depoPages').value) || 0;
+    const depoRate = parseFloat(document.getElementById('depoRate').value) || 0;
+    const depoExtra = document.getElementById('depoExtra').value.trim();
+    
+    const appearanceHours = parseFloat(document.getElementById('appearanceHours').value) || 0;
+    const appearanceRate = parseFloat(document.getElementById('appearanceRate').value) || 0;
+    
+    const exhibitsBW = parseInt(document.getElementById('exhibitsBW').value) || 0;
+    const exhibitsBWRate = parseFloat(document.getElementById('exhibitsBWRate').value) || 0;
+    const exhibitsColor = parseInt(document.getElementById('exhibitsColor').value) || 0;
+    const exhibitsColorRate = parseFloat(document.getElementById('exhibitsColorRate').value) || 0;
+    
+    // Clear existing items
+    const tbody = document.getElementById('itemsTableBody');
+    tbody.innerHTML = '';
+    
+    // 1. Add Deposition item
+    let depoDescription = 'DEPOSITION';
+    if (depoDate) {
+        // Format date as MM/DD/YY
+        const [year, month, day] = depoDate.split('-');
+        const shortYear = year.slice(-2);
+        depoDescription += ` ${month}/${day}/${shortYear}`;
+    }
+    if (depoName) {
+        depoDescription += ` - ${depoName}`;
+    }
+    if (depoPages > 0) {
+        depoDescription += ` - ${depoPages} pages`;
+    }
+    if (depoExtra) {
+        depoDescription += ` - ${depoExtra}`;
+    }
+    addItemRow(depoDescription, depoPages, depoRate);
+    
+    // 2. Add Appearance Fee item
+    const billedHours = Math.max(appearanceHours, 3); // Minimum 3 hours
+    let appearanceDescription;
+    if (appearanceHours <= 3) {
+        appearanceDescription = 'Appearance Fee - 3h minimum';
+    } else {
+        appearanceDescription = `Appearance Fee - ${appearanceHours}h @ $${appearanceRate.toFixed(2)}/h`;
+    }
+    addItemRow(appearanceDescription, billedHours, appearanceRate);
+    
+    // 3. Add Exhibits item (only if there are any exhibits)
+    if (exhibitsBW > 0 || exhibitsColor > 0) {
+        let exhibitsDescription;
+        if (exhibitsBW > 0 && exhibitsColor > 0) {
+            exhibitsDescription = `Exhibits ${exhibitsBW} BW / ${exhibitsColor} Color`;
+        } else if (exhibitsBW > 0) {
+            exhibitsDescription = `Exhibits ${exhibitsBW} BW`;
+        } else {
+            exhibitsDescription = `Exhibits ${exhibitsColor} Color`;
+        }
+        const exhibitsTotal = (exhibitsBW * exhibitsBWRate) + (exhibitsColor * exhibitsColorRate);
+        addItemRow(exhibitsDescription, 1, exhibitsTotal);
+    }
+    
+    // Recalculate totals
+    calculateBalanceDue();
+    
+    // Close modal
+    closePrefillItemsModal();
 }
 
 // Save file using File System Access API (shows file picker)
