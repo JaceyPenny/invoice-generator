@@ -273,7 +273,7 @@ function addItemRow(description = '', qty = 1, unitPrice = 0.00) {
     row.innerHTML = `
         <td class="drag-handle" title="Drag to reorder">⋮⋮</td>
         <td><input type="text" class="item-description" placeholder="Item description" value="${escapedDescription}"></td>
-        <td><input type="number" class="item-qty" min="0" step="0.01" value="${qty}" placeholder="Qty"></td>
+        <td><input type="number" class="item-qty" min="0" step="1" value="${qty}" placeholder="Qty"></td>
         <td><input type="number" class="item-unit-price" min="0" step="0.01" value="${unitPrice}" placeholder="0.00"></td>
         <td class="item-total">$0.00</td>
         <td><button type="button" class="remove-btn">Remove</button></td>
