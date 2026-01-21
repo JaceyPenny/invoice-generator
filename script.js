@@ -53,7 +53,9 @@ function addDefaultItems() {
 // Setup event listeners
 function setupEventListeners() {
     // Add item button
-    document.getElementById('addItemBtn').addEventListener('click', addItemRow);
+    document.getElementById('addItemBtn').addEventListener('click', function() {
+        addItemRow();
+    });
 
     // Print/PDF button
     document.getElementById('printBtn').addEventListener('click', generatePDF);
