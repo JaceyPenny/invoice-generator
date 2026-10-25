@@ -146,6 +146,20 @@ function setupEventListeners() {
         });
     }
 
+    // Export / import local data
+    document.getElementById('exportDataBtn').addEventListener('click', exportLocalData);
+    const importDataInput = document.getElementById('importDataInput');
+    document.getElementById('importDataBtn').addEventListener('click', function() {
+        importDataInput.click();
+    });
+    importDataInput.addEventListener('change', function() {
+        if (this.files.length > 0) {
+            importLocalData(this.files[0]);
+        }
+        // Reset so selecting the same file again still triggers change
+        this.value = '';
+    });
+
     // Address book management modal
     const manageAddressesBtn = document.getElementById('manageAddressesBtn');
     const addressBookModal = document.getElementById('addressBookModal');
@@ -698,6 +712,94 @@ function formatContactInfo(phone, email) {
         html += '</div>';
     }
     return html;
+}
+
+// Export / import of everything kept in localStorage
+const STRING_STORAGE_KEYS = ['lastInvoiceNumber', 'myName', 'myAddress', 'myPhone', 'myEmail', 'checksPayableName'];
+
+function exportLocalData() {
+    // Flush whatever is currently typed in the invoice number field (it normally saves on blur)
+    const currentInvoiceNumber = parseInt(document.getElementById('invoiceNumber').value);
+    if (!isNaN(currentInvoiceNumber) && currentInvoiceNumber > 0) {
+        localStorage.setItem('lastInvoiceNumber', currentInvoiceNumber.toString());
+    }
+
+    const data = {};
+    STRING_STORAGE_KEYS.forEach(key => {
+        const value = localStorage.getItem(key);
+        if (value !== null) {
+            data[key] = value;
+        }
+    });
+    data.clientAddressBook = getAddressBook();
+
+    const exportObj = {
+        app: 'invoice-generator',
+        version: 1,
+        exportedAt: new Date().toISOString(),
+        data: data
+    };
+
+    const blob = new Blob([JSON.stringify(exportObj, null, 2)], { type: 'application/json' });
+    const today = new Date().toISOString().split('T')[0];
+    downloadFileDirectly(blob, `invoice-generator-backup-${today}.json`);
+}
+
+function importLocalData(file) {
+    const reader = new FileReader();
+    reader.onload = function() {
+        let parsed;
+        try {
+            parsed = JSON.parse(reader.result);
+        } catch (error) {
+            alert('Could not read that file: it is not valid JSON.');
+            return;
+        }
+
+        const data = parsed && parsed.app === 'invoice-generator' ? parsed.data : null;
+        if (!data || typeof data !== 'object') {
+            alert('That file does not look like an Invoice Generator export.');
+            return;
+        }
+
+        const importedAddresses = data.clientAddressBook && typeof data.clientAddressBook === 'object'
+            ? data.clientAddressBook : {};
+        const addressCount = Object.keys(importedAddresses).length;
+
+        const summary = [];
+        if (data.lastInvoiceNumber !== undefined) summary.push(`Invoice number: ${data.lastInvoiceNumber}`);
+        if (STRING_STORAGE_KEYS.slice(1).some(key => data[key] !== undefined)) summary.push('My Information');
+        summary.push(`${addressCount} saved address${addressCount === 1 ? '' : 'es'}`);
+
+        const confirmMsg = 'Import the following?\n\n- ' + summary.join('\n- ') +
+            '\n\nThis overwrites the current invoice number and My Information. ' +
+            'Saved addresses are merged (imported entries replace ones with the same name).';
+        if (!confirm(confirmMsg)) return;
+
+        STRING_STORAGE_KEYS.forEach(key => {
+            if (data[key] !== undefined && data[key] !== null) {
+                localStorage.setItem(key, String(data[key]));
+            }
+        });
+
+        const addressBook = getAddressBook();
+        Object.assign(addressBook, importedAddresses);
+        localStorage.setItem('clientAddressBook', JSON.stringify(addressBook));
+
+        // Refresh the form with the imported values
+        const invoiceNumber = parseInt(localStorage.getItem('lastInvoiceNumber'));
+        document.getElementById('invoiceNumber').value = isNaN(invoiceNumber) ? 1 : invoiceNumber;
+        ['myName', 'myAddress', 'myPhone', 'myEmail', 'checksPayableName'].forEach(key => {
+            document.getElementById(key).value = localStorage.getItem(key) || '';
+        });
+        updateAddressBookUI();
+
+        alert('Import complete.');
+    };
+    reader.onerror = function() {
+        alert('Could not read that file.');
+    };
+    reader.readAsText(file);
 }
 
 // Address book functions
